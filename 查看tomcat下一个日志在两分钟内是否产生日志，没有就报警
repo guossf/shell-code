@@ -1,0 +1,32 @@
+#!/bin/bash
+tomcatlog=$1
+newlog=/usr/local/sh/auth.log
+lastUpdateDate=`cat /usr/local/sh/date.log`
+Nowdate=`stat $1 |grep -i "最近更改" |awk -F. '{print $1}' |awk '{print $1$2}' |awk -F- '{print $1$2$3}' |awk -F: '{print $1$2$3}' | awk -F最近更改： '{print $1$2$3}'`
+zerotime=`date +%H%M`
+
+function one_day()
+{
+for i in `seq 2`
+do
+echo `date -d "0day  -$[${i}-1] minute " +"%Y-%m-%d  %H:%M"`
+done
+return $?
+}
+
+if [ "$zerotime" != 0000 ];then
+ if [ "$lastUpdateDate" != "$Nowdate" ];then     
+  true > $newlog
+  one_day | xargs -r -i grep -E "({})" $tomcatlog | grep "$2" > $newlog
+    if test -s "$newlog";then
+      echo "tomcat6正常运行"
+    else
+      echo "portal2下面的tomcat6报错了，赶紧看看" | mutt -s "报警" guoshaofeng@cathay.com.cn wangweijia@cathay.com.cn huangzhijian@cathay.com.cn 
+      stat $newlog |grep -i "最近更改" |awk -F. '{print $1}' |awk '{print $1$2}' |awk -F- '{print $1$2$3}' |awk -F: '{print $1$2$3}' | awk -F最近更改： '{print $1$2$3}' > /usr/local/sh/date.log       
+    fi
+ else
+  exit
+ fi
+else
+  exit
+fi
